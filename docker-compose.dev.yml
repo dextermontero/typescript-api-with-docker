@@ -1,0 +1,46 @@
+services:
+  mysqldb:
+    image: mysql:latest
+    restart: unless-stopped
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+      - $HOME/database:/var/lib/mysql
+    ports:
+      - 1109:1109
+    expose:
+      - 1109
+    environment:
+      - MYSQL_HOST=host.docker.internal
+      - MYSQL_DATABASE=db_docker
+      - MYSQL_USER=user_docker
+      - MYSQL_PASSWORD=pwd_docker
+      - MYSQL_ROOT_PASSWORD=pwd_docker
+      - MYSQL_TCP_PORT=1109
+    networks:
+      - internalnet
+
+  api:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 4000:4000
+    expose:
+      - 4000
+    environment:
+      - MYSQL_HOST=host.docker.internal
+      - MYSQL_DATABASE=db_docker
+      - MYSQL_USER=user_docker
+      - MYSQL_PASSWORD=pwd_docker
+      - MYSQL_ROOT_PASSWORD=pwd_docker
+      - MYSQL_PORT=3308
+    depends_on:
+      - mysqldb
+    networks:
+      - internalnet
+    command: npm run build
+
+networks:
+  internalnet:
+    driver: bridge
